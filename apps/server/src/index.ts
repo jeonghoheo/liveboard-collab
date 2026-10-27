@@ -1,10 +1,15 @@
+import { createServer } from "node:http";
+import cors from "cors";
 import express from "express";
+import { Server as SocketServer } from "socket.io";
 import { env } from "./config/env.js";
 import { pool } from "./db/pool.js";
 import { boardsRouter } from "./http/routes/boards.js";
+import { registerBoardHandlers } from "./sockets/boardHandlers.js";
 
 const app = express();
 
+app.use(cors({ origin: env.WEB_ORIGIN }));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
@@ -25,14 +30,21 @@ app.use(
   },
 );
 
-const server = app.listen(env.SERVER_PORT, () => {
+const httpServer = createServer(app);
+const io = new SocketServer(httpServer, {
+  cors: { origin: env.WEB_ORIGIN },
+});
+
+registerBoardHandlers(io);
+
+httpServer.listen(env.SERVER_PORT, () => {
   console.log(`Server listening on http://localhost:${env.SERVER_PORT}`);
 });
 
 function shutdown(signal: string) {
   console.log(`${signal} received, shutting down`);
 
-  server.close(() => {
+  io.close(() => {
     pool
       .end()
       .then(() => {

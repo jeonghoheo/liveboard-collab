@@ -12,6 +12,9 @@
   ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:server": "npm run dev -w @liveboard/server",
+    "dev:web": "npm run dev -w @liveboard/web",
+    "migrate": "npm run migrate -w @liveboard/server",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v",
